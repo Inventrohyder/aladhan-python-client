@@ -1,0 +1,1802 @@
+# checkov:skip=CKV_OPENAPI_4:AlAdhan.com API is public with no authentication required
+# checkov:skip=CKV_OPENAPI_5:AlAdhan.com API is public with no authentication required
+openapi: 3.1.0
+info:
+  title: AlAdhan Prayer Times API
+  version: 1.0.0
+  description: |
+    Complete OpenAPI 3.1.0 specification for the AlAdhan Prayer Times API.
+
+    The AlAdhan API provides Islamic prayer times, calendar conversions, Qibla direction,
+    and other Islamic data. This specification covers all available endpoints.
+
+    **Base URL**: https://api.aladhan.com/v1
+
+    **Key Features**:
+    - Prayer times calculation using multiple methods
+    - Hijri-Gregorian calendar conversions
+    - Qibla direction calculation
+    - 99 Names of Allah (Asma al-Husna)
+    - Islamic holidays and special dates
+
+    **Rate Limiting**: The API does not enforce strict rate limits but requests
+    excessive usage to be avoided. Aggressive caching is recommended for prayer times
+    as they are deterministic for a given date and location.
+
+  contact:
+    name: Islamic Network
+    url: https://aladhan.com
+    email: support@islamic.network
+  license:
+    name: GPL-3.0
+    url: https://www.gnu.org/licenses/gpl-3.0.html
+
+servers:
+  - url: https://api.aladhan.com/v1
+    description: Production API server
+  - url: https://aladhan.api.islamic.network/v1/
+  - url: https://aladhan.api.alislam.ru/v1/
+
+tags:
+  - name: Prayer Times
+    description: Endpoints for calculating prayer times
+  - name: Calendar
+    description: Monthly and yearly prayer time calendars
+  - name: Hijri Calendar
+    description: Hijri calendar and conversion endpoints
+  - name: Qibla
+    description: Qibla direction calculation
+  - name: Asma Al-Husna
+    description: 99 Names of Allah
+  - name: Methods
+    description: Calculation methods information
+  - name: Info
+    description: Utility and information endpoints
+
+paths:
+  # Prayer Times Endpoints
+  /timings/{date}:
+    get:
+      tags:
+        - Prayer Times
+      summary: Prayer times for a specific date
+      description: Get prayer times for a specific date using coordinates
+      operationId: getTimingsByDate
+      parameters:
+        - name: date
+          in: path
+          required: true
+          description: Date in DD-MM-YYYY format, or unix timestamp
+          schema:
+            type: string
+          example: 26-10-2025
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/timezonestring"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimingsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /timings:
+    get:
+      tags:
+        - Prayer Times
+      summary: Prayer times for today
+      description: Get prayer times for current date using coordinates
+      operationId: getTimingsToday
+      parameters:
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/timezonestring"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimingsResponse"
+
+  /timingsByCity/{date}:
+    get:
+      tags:
+        - Prayer Times
+      summary: Prayer times by city
+      description: Get prayer times for a specific date using city name
+      operationId: getTimingsByCityAndDate
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 26-10-2025
+        - $ref: "#/components/parameters/city"
+        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/state"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimingsResponse"
+
+  /timingsByCity:
+    get:
+      tags:
+        - Prayer Times
+      summary: Prayer times by city for today
+      description: Get prayer times for today using city name
+      operationId: getTimingsByCityToday
+      parameters:
+        - $ref: "#/components/parameters/city"
+        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/state"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimingsResponse"
+
+  /timingsByAddress/{date}:
+    get:
+      tags:
+        - Prayer Times
+      summary: Prayer times by address
+      description: Get prayer times for a specific date using an address (uses geocoding)
+      operationId: getTimingsByAddressAndDate
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 26-10-2025
+        - $ref: "#/components/parameters/address"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimingsResponse"
+
+  /timingsByAddress:
+    get:
+      tags:
+        - Prayer Times
+      summary: Prayer times by address for today
+      description: Get prayer times for today using an address (uses geocoding)
+      operationId: getTimingsByAddressToday
+      parameters:
+        - $ref: "#/components/parameters/address"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimingsResponse"
+
+  /nextPrayer/{latitude}/{longitude}:
+    get:
+      tags:
+        - Prayer Times
+      summary: Next prayer time
+      description: Get the next prayer time for a location
+      operationId: getNextPrayer
+      parameters:
+        - name: latitude
+          in: path
+          required: true
+          schema:
+            type: number
+            format: float
+        - name: longitude
+          in: path
+          required: true
+          schema:
+            type: number
+            format: float
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/timezonestring"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NextPrayerResponse"
+
+  /nextPrayerByAddress:
+    get:
+      tags:
+        - Prayer Times
+      summary: Next prayer time by address
+      description: Get the next prayer time for an address
+      operationId: getNextPrayerByAddress
+      parameters:
+        - $ref: "#/components/parameters/address"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NextPrayerResponse"
+
+  # Calendar Endpoints
+  /calendar/{year}/{month}:
+    get:
+      tags:
+        - Calendar
+      summary: Monthly prayer calendar
+      description: Get prayer times for an entire month
+      operationId: getCalendarByMonth
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 2025
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+          example: 10
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/timezonestring"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+        - $ref: "#/components/parameters/annual"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarResponse"
+
+  /calendarByCity/{year}/{month}:
+    get:
+      tags:
+        - Calendar
+      summary: Monthly calendar by city
+      description: Get prayer times for an entire month using city name
+      operationId: getCalendarByCityAndMonth
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - $ref: "#/components/parameters/city"
+        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/state"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+        - $ref: "#/components/parameters/annual"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarResponse"
+
+  /calendarByAddress/{year}/{month}:
+    get:
+      tags:
+        - Calendar
+      summary: Monthly calendar by address
+      description: Get prayer times for an entire month using address
+      operationId: getCalendarByAddressAndMonth
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - $ref: "#/components/parameters/address"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+        - $ref: "#/components/parameters/annual"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarResponse"
+
+  # Hijri Calendar Endpoints
+  /hijriCalendar/{year}/{month}:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Hijri calendar
+      description: Get Hijri calendar for a month
+      operationId: getHijriCalendar
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1447
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/timezonestring"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarResponse"
+
+  /hijriCalendarByCity/{year}/{month}:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Hijri calendar by city
+      description: Get Hijri calendar for a month using city name
+      operationId: getHijriCalendarByCity
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - $ref: "#/components/parameters/city"
+        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/state"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarResponse"
+
+  /hijriCalendarByAddress/{year}/{month}:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Hijri calendar by address
+      description: Get Hijri calendar for a month using address
+      operationId: getHijriCalendarByAddress
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - $ref: "#/components/parameters/address"
+        - $ref: "#/components/parameters/method"
+        - $ref: "#/components/parameters/shafaq"
+        - $ref: "#/components/parameters/tune"
+        - $ref: "#/components/parameters/school"
+        - $ref: "#/components/parameters/midnightMode"
+        - $ref: "#/components/parameters/latitudeAdjustmentMethod"
+        - $ref: "#/components/parameters/adjustment"
+        - $ref: "#/components/parameters/iso8601"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarResponse"
+
+  /gToH/{date}:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Gregorian to Hijri conversion
+      description: Convert a Gregorian date to Hijri
+      operationId: gregorianToHijri
+      parameters:
+        - name: date
+          in: path
+          required: true
+          description: Date in DD-MM-YYYY format
+          schema:
+            type: string
+          example: 26-10-2025
+        - $ref: "#/components/parameters/adjustment"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DateConversionResponse"
+
+  /hToG/{date}:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Hijri to Gregorian conversion
+      description: Convert a Hijri date to Gregorian
+      operationId: hijriToGregorian
+      parameters:
+        - name: date
+          in: path
+          required: true
+          description: Date in DD-MM-YYYY format (Hijri)
+          schema:
+            type: string
+          example: 04-05-1447
+        - $ref: "#/components/parameters/adjustment"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DateConversionResponse"
+
+  /gToHCalendar/{month}/{year}:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Gregorian to Hijri calendar
+      description: Get a Hijri calendar month from Gregorian month/year
+      operationId: gregorianToHijriCalendar
+      parameters:
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - $ref: "#/components/parameters/adjustment"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HijriCalendarResponse"
+
+  /hToGCalendar/{month}/{year}:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Hijri to Gregorian calendar
+      description: Get a Gregorian calendar month from Hijri month/year
+      operationId: hijriToGregorianCalendar
+      parameters:
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - $ref: "#/components/parameters/adjustment"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GregorianCalendarResponse"
+
+  /currentIslamicMonth:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Current Islamic month
+      description: Get the current Islamic month
+      operationId: getCurrentIslamicMonth
+      parameters:
+        - $ref: "#/components/parameters/adjustment"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IslamicMonthResponse"
+
+  /currentIslamicYear:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Current Islamic year
+      description: Get the current Islamic year
+      operationId: getCurrentIslamicYear
+      parameters:
+        - $ref: "#/components/parameters/adjustment"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IslamicYearResponse"
+
+  /islamicYearFromGregorianForRamadan/{year}:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Islamic year for Ramadan
+      description: Get the Islamic year in which Ramadan falls for a given Gregorian year
+      operationId: getIslamicYearForRamadan
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - $ref: "#/components/parameters/adjustment"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IslamicYearResponse"
+
+  /hijriHolidays/{day}/{month}:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Islamic holidays
+      description: Get Islamic holidays for a specific Hijri date
+      operationId: getHijriHolidays
+      parameters:
+        - name: day
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 30
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HolidaysResponse"
+
+  /islamicHolidaysByHijriYear/{year}:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Islamic holidays by year
+      description: Get all Islamic holidays for a Hijri year
+      operationId: getIslamicHolidaysByYear
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - $ref: "#/components/parameters/adjustment"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/YearlyHolidaysResponse"
+
+  /specialDays:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Special Islamic days
+      description: Get a list of special Islamic days
+      operationId: getSpecialDays
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpecialDaysResponse"
+
+  /islamicMonths:
+    get:
+      tags:
+        - Hijri Calendar
+      summary: Islamic months
+      description: Get list of Islamic month names
+      operationId: getIslamicMonths
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IslamicMonthsResponse"
+
+  # Qibla Endpoints
+  /qibla/{latitude}/{longitude}:
+    get:
+      tags:
+        - Qibla
+      summary: Qibla direction
+      description: Get the Qibla direction from coordinates
+      operationId: getQiblaDirection
+      parameters:
+        - name: latitude
+          in: path
+          required: true
+          schema:
+            type: number
+            format: float
+        - name: longitude
+          in: path
+          required: true
+          schema:
+            type: number
+            format: float
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QiblaResponse"
+
+  /qiblaByAddress:
+    get:
+      tags:
+        - Qibla
+      summary: Qibla direction by address
+      description: Get the Qibla direction from an address
+      operationId: getQiblaByAddress
+      parameters:
+        - $ref: "#/components/parameters/address"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QiblaResponse"
+
+  # Asma Al-Husna Endpoints
+  /asmaAlHusna:
+    get:
+      tags:
+        - Asma Al-Husna
+      summary: All names of Allah
+      description: Get all 99 names of Allah
+      operationId: getAllAsmaAlHusna
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AsmaAlHusnaResponse"
+
+  /asmaAlHusna/{number}:
+    get:
+      tags:
+        - Asma Al-Husna
+      summary: Specific name of Allah
+      description: Get a specific name of Allah by number (1-99)
+      operationId: getAsmaAlHusnaByNumber
+      parameters:
+        - name: number
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 99
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleAsmaResponse"
+
+  # Methods Endpoint
+  /methods:
+    get:
+      tags:
+        - Methods
+      summary: Calculation methods
+      description: |
+        Get all available prayer calculation methods.
+
+        **Note**: The response uses dynamic keys for method codes (e.g., "MWL", "ISNA", etc.).
+        Each method object contains its ID, name, parameters, and location.
+      operationId: getMethods
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MethodsResponse"
+              example:
+                code: 200
+                status: OK
+                data:
+                  MWL:
+                    id: 3
+                    name: Muslim World League
+                    params:
+                      Fajr: 18
+                      Isha: 17
+                    location:
+                      latitude: 51.5194682
+                      longitude: -0.1360365
+                  ISNA:
+                    id: 2
+                    name: Islamic Society of North America
+                    params:
+                      Fajr: 15
+                      Isha: 15
+                    location:
+                      latitude: 39.7042129
+                      longitude: -86.3994387
+
+  # Info Endpoints
+  /currentTime:
+    get:
+      tags:
+        - Info
+      summary: Current time
+      description: Get current time for a timezone
+      operationId: getCurrentTime
+      parameters:
+        - name: zone
+          in: query
+          required: true
+          schema:
+            type: string
+          example: Europe/London
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentTimeResponse"
+
+  /currentTimestamp:
+    get:
+      tags:
+        - Info
+      summary: Current timestamp
+      description: Get current Unix timestamp
+      operationId: getCurrentTimestamp
+      parameters:
+        - name: zone
+          in: query
+          required: true
+          schema:
+            type: string
+          example: Europe/London
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentTimestampResponse"
+
+  /cityInfo:
+    get:
+      tags:
+        - Info
+      summary: City information
+      description: Get information about a city including timezone and coordinates
+      operationId: getCityInfo
+      parameters:
+        - $ref: "#/components/parameters/city"
+        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/state"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CityInfoResponse"
+
+  /addressInfo:
+    get:
+      tags:
+        - Info
+      summary: Address information
+      description: Get information about an address including timezone and coordinates
+      operationId: getAddressInfo
+      parameters:
+        - $ref: "#/components/parameters/address"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddressInfoResponse"
+
+components:
+  parameters:
+    latitude:
+      name: latitude
+      in: query
+      required: true
+      schema:
+        type: number
+        format: float
+        minimum: -90
+        maximum: 90
+      example: 51.508515
+      description: Latitude coordinate
+
+    longitude:
+      name: longitude
+      in: query
+      required: true
+      schema:
+        type: number
+        format: float
+        minimum: -180
+        maximum: 180
+      example: -0.1254872
+      description: Longitude coordinate
+
+    method:
+      name: method
+      in: query
+      schema:
+        type: integer
+        enum:
+          [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            99,
+          ]
+      example: 2
+      description: |
+        Calculation method:
+        - 0: Shia Ithna-Ashari
+        - 1: University of Islamic Sciences, Karachi
+        - 2: Islamic Society of North America
+        - 3: Muslim World League
+        - 4: Umm Al-Qura University, Makkah
+        - 5: Egyptian General Authority of Survey
+        - 7: Institute of Geophysics, University of Tehran
+        - 8: Gulf Region
+        - 9: Kuwait
+        - 10: Qatar
+        - 11: Majlis Ugama Islam Singapura, Singapore
+        - 12: Union Organization islamic de France
+        - 13: Diyanet İşleri Başkanlığı, Turkey
+        - 14: Spiritual Administration of Muslims of Russia
+        - 15: Moonsighting Committee Worldwide
+        - 16: Dubai (UAE)
+        - 17: Jabatan Kemajuan Islam Malaysia (JAKIM)
+        - 18: Tunisia
+        - 19: Algeria
+        - 20: KEMENAG Indonesia
+        - 21: Morocco
+        - 22: Comunidade Islamica de Lisboa
+        - 23: Ministry of Awqaf, Jordan
+        - 99: Custom (requires additional parameters)
+
+    shafaq:
+      name: shafaq
+      in: query
+      schema:
+        type: string
+        enum: [general, ahmer, abyad]
+      description: |
+        Shafaq parameter for Moonsighting Committee method (15):
+        - general: General (default)
+        - ahmer: Red twilight
+        - abyad: White twilight
+
+    tune:
+      name: tune
+      in: query
+      schema:
+        type: string
+      example: 0,0,0,0,0,0,0,0,0
+      description: |
+        Comma-separated time adjustments in minutes for:
+        Imsak,Fajr,Sunrise,Dhuhr,Asr,Maghrib,Sunset,Isha,Midnight
+        Example: "0,-3,0,0,0,3,0,0,0" advances Fajr by 3 mins and delays Maghrib by 3 mins
+
+    school:
+      name: school
+      in: query
+      schema:
+        type: integer
+        enum: [0, 1]
+      example: 0
+      description: |
+        Asr calculation school:
+        - 0: Shafi, Maliki, Hanbali (default)
+        - 1: Hanafi
+
+    midnightMode:
+      name: midnightMode
+      in: query
+      schema:
+        type: integer
+        enum: [0, 1]
+      example: 0
+      description: |
+        Midnight calculation:
+        - 0: Standard (mid-point of Sunset to Sunrise)
+        - 1: Jafari (mid-point of Sunset to Fajr)
+
+    timezonestring:
+      name: timezonestring
+      in: query
+      schema:
+        type: string
+      example: Europe/London
+      description: |
+        Timezone string (e.g., Europe/London, America/New_York).
+        If not specified, uses UTC.
+
+    latitudeAdjustmentMethod:
+      name: latitudeAdjustmentMethod
+      in: query
+      schema:
+        type: integer
+        enum: [1, 2, 3]
+      example: 3
+      description: |
+        Higher latitude adjustment:
+        - 1: Middle of the Night
+        - 2: One-Seventh of the Night
+        - 3: Angle-Based (default)
+
+    adjustment:
+      name: adjustment
+      in: query
+      schema:
+        type: integer
+        minimum: -3
+        maximum: 3
+      example: 0
+      description: Days to adjust Hijri date (+/- 1 or 2)
+
+    iso8601:
+      name: iso8601
+      in: query
+      schema:
+        type: boolean
+      example: false
+      description: Return prayer times in ISO8601 format
+
+    city:
+      name: city
+      in: query
+      required: true
+      schema:
+        type: string
+      example: London
+      description: City name
+
+    country:
+      name: country
+      in: query
+      required: true
+      schema:
+        type: string
+      example: United Kingdom
+      description: Country name
+
+    state:
+      name: state
+      in: query
+      schema:
+        type: string
+      description: State or province (optional, for countries with states)
+
+    address:
+      name: address
+      in: query
+      required: true
+      schema:
+        type: string
+      example: 1420 Austin Bluffs Parkway, Colorado Springs, CO
+      description: Address for geocoding
+
+    annual:
+      name: annual
+      in: query
+      schema:
+        type: boolean
+      example: false
+      description: If true, returns the entire year calendar
+
+  schemas:
+    # Base Response
+    BaseResponse:
+      type: object
+      required:
+        - code
+        - status
+      properties:
+        code:
+          type: integer
+          example: 200
+          description: HTTP status code
+        status:
+          type: string
+          example: OK
+          description: Status message
+
+    # Prayer Times
+    PrayerTimes:
+      type: object
+      description: |
+        Prayer times for a day. Properties may vary based on calculation method.
+        Standard prayers: Fajr, Sunrise, Dhuhr, Asr, Sunset, Maghrib, Isha.
+        Additional: Imsak, Midnight, Firstthird, Lastthird.
+      properties:
+        Fajr:
+          type: string
+          example: 05:21
+        Sunrise:
+          type: string
+          example: 06:52
+        Dhuhr:
+          type: string
+          example: 12:11
+        Asr:
+          type: string
+          example: 15:11
+        Sunset:
+          type: string
+          example: 17:25
+        Maghrib:
+          type: string
+          example: 17:25
+        Isha:
+          type: string
+          example: 18:54
+        Imsak:
+          type: string
+          example: 05:11
+        Midnight:
+          type: string
+          example: 23:58
+        Firstthird:
+          type: string
+          example: 21:36
+        Lastthird:
+          type: string
+          example: 02:20
+      additionalProperties:
+        type: string
+        description: Additional prayer times may be included
+
+    # Date Objects
+    HijriDate:
+      type: object
+      properties:
+        date:
+          type: string
+          example: 04-05-1447
+        format:
+          type: string
+          example: DD-MM-YYYY
+        day:
+          type: string
+          example: "4"
+        weekday:
+          type: object
+          properties:
+            en:
+              type: string
+              example: Al Ahad
+            ar:
+              type: string
+              example: الأحد
+        month:
+          type: object
+          properties:
+            number:
+              type: integer
+              example: 5
+            en:
+              type: string
+              example: Jumādá al-ūlá
+            ar:
+              type: string
+              example: جُمادى الأولى
+            days:
+              type: integer
+              example: 30
+        year:
+          type: string
+          example: "1447"
+        designation:
+          type: object
+          properties:
+            abbreviated:
+              type: string
+              example: AH
+            expanded:
+              type: string
+              example: Anno Hegirae
+        holidays:
+          type: array
+          maxItems: 5
+          items:
+            type: string
+
+    GregorianDate:
+      type: object
+      properties:
+        date:
+          type: string
+          example: 26-10-2025
+        format:
+          type: string
+          example: DD-MM-YYYY
+        day:
+          type: string
+          example: "26"
+        weekday:
+          type: object
+          properties:
+            en:
+              type: string
+              example: Sunday
+        month:
+          type: object
+          properties:
+            number:
+              type: integer
+              example: 10
+            en:
+              type: string
+              example: October
+        year:
+          type: string
+          example: "2025"
+        designation:
+          type: object
+          properties:
+            abbreviated:
+              type: string
+              example: AD
+            expanded:
+              type: string
+              example: Anno Domini
+
+    DateInfo:
+      type: object
+      properties:
+        readable:
+          type: string
+          example: 26 Oct 2025
+        timestamp:
+          type: string
+          example: "1761451200"
+        gregorian:
+          $ref: "#/components/schemas/GregorianDate"
+        hijri:
+          $ref: "#/components/schemas/HijriDate"
+
+    # Meta Information
+    MetaInfo:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+        timezone:
+          type: string
+        method:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            params:
+              type: object
+              description: Method-specific parameters
+              additionalProperties:
+                oneOf:
+                  - type: number
+                  - type: string
+            location:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+        latitudeAdjustmentMethod:
+          type: string
+        midnightMode:
+          type: string
+        school:
+          type: string
+        offset:
+          type: object
+          description: Time adjustments applied
+          additionalProperties:
+            type: integer
+
+    # Response Schemas
+    TimingsResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                timings:
+                  $ref: "#/components/schemas/PrayerTimes"
+                date:
+                  $ref: "#/components/schemas/DateInfo"
+                meta:
+                  $ref: "#/components/schemas/MetaInfo"
+
+    NextPrayerResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                timings:
+                  $ref: "#/components/schemas/PrayerTimes"
+                date:
+                  $ref: "#/components/schemas/DateInfo"
+                meta:
+                  $ref: "#/components/schemas/MetaInfo"
+
+    CalendarResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              oneOf:
+                - type: array
+                  description: Monthly calendar
+                  maxItems: 31
+                  items:
+                    type: object
+                    properties:
+                      timings:
+                        $ref: "#/components/schemas/PrayerTimes"
+                      date:
+                        $ref: "#/components/schemas/DateInfo"
+                      meta:
+                        $ref: "#/components/schemas/MetaInfo"
+                - type: object
+                  description: Annual calendar (when annual=true)
+                  additionalProperties:
+                    type: array
+                    maxItems: 31
+                    items:
+                      type: object
+                      properties:
+                        timings:
+                          $ref: "#/components/schemas/PrayerTimes"
+                        date:
+                          $ref: "#/components/schemas/DateInfo"
+                        meta:
+                          $ref: "#/components/schemas/MetaInfo"
+
+    MethodsResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: object
+              description: |
+                Dynamic object where keys are method codes (e.g., "MWL", "ISNA").
+                Each value is a method definition object.
+              additionalProperties:
+                type: object
+                required:
+                  - id
+                  - name
+                properties:
+                  id:
+                    type: integer
+                    description: Numeric ID for the method
+                  name:
+                    type: string
+                    description: Human-readable name of the method
+                  params:
+                    type: object
+                    description: |
+                      Method parameters. Common keys include:
+                      - Fajr: Angle or minutes
+                      - Isha: Angle or minutes  
+                      - Maghrib: Angle or minutes (optional)
+                      - Midnight: Mode (optional)
+                    additionalProperties:
+                      oneOf:
+                        - type: number
+                          description: Angle in degrees
+                        - type: string
+                          description: Time in minutes (e.g., "90 min")
+                  location:
+                    type: object
+                    description: Reference location for this method
+                    properties:
+                      latitude:
+                        type: number
+                        format: float
+                      longitude:
+                        type: number
+                        format: float
+
+    DateConversionResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                hijri:
+                  $ref: "#/components/schemas/HijriDate"
+                gregorian:
+                  $ref: "#/components/schemas/GregorianDate"
+
+    HijriCalendarResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              maxItems: 30
+              items:
+                type: object
+                properties:
+                  gregorian:
+                    $ref: "#/components/schemas/GregorianDate"
+                  hijri:
+                    $ref: "#/components/schemas/HijriDate"
+
+    GregorianCalendarResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              maxItems: 31
+              items:
+                type: object
+                properties:
+                  gregorian:
+                    $ref: "#/components/schemas/GregorianDate"
+                  hijri:
+                    $ref: "#/components/schemas/HijriDate"
+
+    IslamicMonthResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/HijriDate"
+
+    IslamicYearResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: integer
+              example: 1447
+
+    HolidaysResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              maxItems: 5 # It might be more, however, I don't think there is a day with more than 5 holidays
+              items:
+                type: string
+                example: Mawlid an-Nabi
+
+    YearlyHolidaysResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              maxItems: 100
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  date:
+                    type: string
+                  hijri:
+                    $ref: "#/components/schemas/HijriDate"
+                  gregorian:
+                    $ref: "#/components/schemas/GregorianDate"
+
+    SpecialDaysResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              maxItems: 20
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  date:
+                    type: string
+
+    IslamicMonthsResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  number:
+                    type: integer
+                  en:
+                    type: string
+                  ar:
+                    type: string
+
+    QiblaResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                  format: float
+                longitude:
+                  type: number
+                  format: float
+                direction:
+                  type: number
+                  format: float
+                  description: Qibla direction in degrees from North
+
+    AsmaAlHusnaResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              maxItems: 99
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: Name of Allah in Arabic
+                  transliteration:
+                    type: string
+                  number:
+                    type: integer
+                  en:
+                    type: object
+                    properties:
+                      meaning:
+                        type: string
+
+    SingleAsmaResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              maxItems: 1
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: Name of Allah in Arabic
+                  transliteration:
+                    type: string
+                  number:
+                    type: integer
+                  en:
+                    type: object
+                    properties:
+                      meaning:
+                        type: string
+
+    CurrentTimeResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: string
+              example: "13:14"
+
+    CurrentTimestampResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: string
+              example: "1635253440"
+
+    CityInfoResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                  format: float
+                longitude:
+                  type: number
+                  format: float
+                timezone:
+                  type: string
+                country:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                    name:
+                      type: string
+
+    AddressInfoResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseResponse"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                  format: float
+                longitude:
+                  type: number
+                  format: float
+                timezone:
+                  type: string
+
+  responses:
+    BadRequest:
+      description: Bad Request - Invalid parameters
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/BaseResponse"
+              - type: object
+                properties:
+                  code:
+                    example: 400
+                  status:
+                    example: Bad Request
+                  data:
+                    type: string
+                    example: Please specify a valid latitude and longitude.
